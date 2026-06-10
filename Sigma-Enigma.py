@@ -1,5 +1,6 @@
 import base64
 from pathlib import Path
+import io
 
 from PIL import Image
 import streamlit as st
@@ -8,8 +9,7 @@ NUM_PIXELS = 100
 
 
 def build_keystream(img):
-    """Liest die ersten NUM_PIXELS Pixel eines Bildes und gibt die Farbwerte
-    (0-255) als flache Liste von Verschiebungswerten zurück: [r, g, b, ...]."""
+    """Liest die ersten NUM_PIXELS Pixel und erzeugt Keystream."""
     img = img.convert("RGB")
     width, height = img.size
     count = min(NUM_PIXELS, width * height)
@@ -19,7 +19,7 @@ def build_keystream(img):
 
 
 def caesar(text, keystream, decrypt=False):
-    """Caesar-Verschlüsselung mit fortlaufendem Schlüssel."""
+    """Caesar-Verschlüsselung mit Bild-basiertem Schlüssel."""
     out = []
     j = 0
     n = len(keystream)
@@ -49,7 +49,7 @@ st.set_page_config(page_title="Sigma-Enigma", page_icon="🔐", layout="centered
 
 st.title("Sigma-Enigma")
 st.caption(
-    "Bildbasierte Caesar-Verschlüsselung — der Schlüssel entsteht aus den Farbwerten der Pixel."
+    "Bildbasierte Caesar-Verschlüsselung — der Schlüssel entsteht aus den Pixelwerten."
 )
 
 if "result" not in st.session_state:
@@ -60,11 +60,15 @@ if "result" not in st.session_state:
 col_in, col_key = st.columns(2)
 
 with col_in:
-    text = st.text_area("Text", height=160, placeholder="Hier deinen Text eingeben …")
+    text = st.text_area(
+        "Text",
+        height=160,
+        placeholder="Hier deinen geheimen Text eingeben …",
+    )
 
 with col_key:
     uploaded = st.file_uploader(
-        "Schlüssel-Bild hochladen",
+        "Schlüsselbild hochladen",
         type=["jpg", "jpeg", "png", "bmp", "gif"],
     )
 
@@ -72,22 +76,39 @@ with col_key:
 
     image_source = camera_image if camera_image is not None else uploaded
 
-    if image_source is not None:
-        st.image(image_source, caption="Schlüssel-Bild", use_container_width=True)
+
+# ---------------- Bildanzeige + Download ----------------
+
+if image_source is not None:
+    st.image(image_source, caption="Schlüsselbild", use_container_width=True)
+
+    img = Image.open(image_source)
+
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    st.download_button(
+        label="🔐 Schlüsselbild herunterladen",
+        data=buffer,
+        file_name="enigma_key_image.png",
+        mime="image/png",
+    )
 
 
 st.divider()
+
+# ---------------- Buttons ----------------
 
 btn_enc, btn_dec = st.columns(2)
 do_encrypt = btn_enc.button("Verschlüsseln", use_container_width=True, type="primary")
 do_decrypt = btn_dec.button("Entschlüsseln", use_container_width=True)
 
-
 if do_encrypt or do_decrypt:
     if not text:
         st.warning("Bitte zuerst einen Text eingeben.")
     elif image_source is None:
-        st.warning("Bitte zuerst ein Schlüssel-Bild hochladen oder aufnehmen.")
+        st.warning("Bitte zuerst ein Schlüsselbild hochladen oder aufnehmen.")
     else:
         img = Image.open(image_source)
         keystream = build_keystream(img)
@@ -96,6 +117,8 @@ if do_encrypt or do_decrypt:
         st.session_state.result = caesar(text, keystream, decrypt=decrypt)
         st.session_state.result_label = "Entschlüsselt" if decrypt else "Verschlüsselt"
 
+
+# ---------------- Output ----------------
 
 if st.session_state.result:
     st.subheader(st.session_state.result_label)
