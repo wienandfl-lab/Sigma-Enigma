@@ -72,7 +72,7 @@ with col_key:
         type=["jpg", "jpeg", "png", "bmp", "gif"],
     )
 
-    camera_image = st.camera_input("Oder Foto aufnehmen 📷")
+    camera_image = st.camera_input("Oder Foto aufnehmen")
 
     image_source = camera_image if camera_image is not None else uploaded
 
@@ -89,7 +89,7 @@ if image_source is not None:
     buffer.seek(0)
 
     st.download_button(
-        label="🔐 Schlüsselbild herunterladen",
+        label="Schlüsselbild herunterladen",
         data=buffer,
         file_name="enigma_key_image.png",
         mime="image/png",
