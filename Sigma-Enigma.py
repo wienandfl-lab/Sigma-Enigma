@@ -89,25 +89,3 @@ if st.session_state.result:
     st.code(st.session_state.result, language=None)
 
 
-# ----------------------------------------------------------- Logo-Ecke --------
-# Dezentes Logo fest unten rechts auf der Seite.
-_logo_path = Path(__file__).parent / "logo.png"
-if _logo_path.exists():
-    _logo_b64 = base64.b64encode(_logo_path.read_bytes()).decode()
-    st.markdown(
-        f"""
-        <style>
-        .se-logo {{
-            position: fixed;
-            right: 20px;
-            bottom: 16px;
-            width: 150px;
-            opacity: 0.55;
-            z-index: 100;
-            pointer-events: none;
-        }}
-        </style>
-        <img class="se-logo" src="data:image/png;base64,{_logo_b64}">
-        """,
-        unsafe_allow_html=True,
-    )
