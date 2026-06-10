@@ -45,7 +45,7 @@ def caesar(text, keystream, decrypt=False):
 
 # ---------------- UI ----------------
 
-st.set_page_config(page_title="Sigma-Enigma", page_icon="🔐", layout="centered")
+st.set_page_config(page_title="Sigma-Enigma", page_icon="icon.png", layout="centered")
 
 st.title("Sigma-Enigma")
 st.caption(
